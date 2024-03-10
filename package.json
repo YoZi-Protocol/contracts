@@ -1,0 +1,23 @@
+{
+  "name": "@eos420/contracts",
+  "version": "0.1.0",
+  "description": "eos420 contracts",
+  "scripts": {
+    "build": "hardhat compile",
+    "test": "hardhat test",
+    "coverage": "hardhat coverage"
+  },
+  "license": "GPL-3.0-only",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.6",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@openzeppelin/hardhat-upgrades": "^3.0.5",
+    "@types/node": "^20.11.25",
+    "chai": "^4.4.1",
+    "hardhat": "^2.21.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.6",
+    "@openzeppelin/contracts-upgradeable": "^4.9.6"
+  }
+}
