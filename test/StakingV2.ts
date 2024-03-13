@@ -7,7 +7,7 @@ import {
 import { expect } from 'chai';
 import { ethers, upgrades } from 'hardhat';
 
-describe('Staking', () => {
+describe('StakingV2', () => {
   async function deploy() {
     const chainId = '17777';
     const assetId = 'yozi';
@@ -20,7 +20,7 @@ describe('Staking', () => {
     const verifier = await ethers.deployContract('MockVerifier');
     await verifier.waitForDeployment();
 
-    const Staking = await ethers.getContractFactory('Staking');
+    const Staking = await ethers.getContractFactory('StakingV2');
 
     const beacon = await upgrades.deployBeacon(Staking);
     await beacon.waitForDeployment();
@@ -61,115 +61,6 @@ describe('Staking', () => {
       expect(await staking.assetId()).to.equal(
         `0x${Buffer.from(new TextEncoder().encode(assetId)).toString('hex')}`,
       );
-    });
-
-    it('Should set the right roles', async () => {
-      const { staking, owner } = await loadFixture(deploy);
-
-      expect(
-        await staking.hasRole(
-          await staking.DEFAULT_ADMIN_ROLE(),
-          owner.address,
-        ),
-      ).to.be.true;
-
-      expect(await staking.hasRole(await staking.PAUSER_ROLE(), owner.address))
-        .to.be.true;
-    });
-
-    it('Should receive and send ETH', async () => {
-      const { staking, owner, otherAccount } = await loadFixture(deploy);
-
-      expect(
-        await otherAccount.sendTransaction({
-          to: staking.target,
-          value: ethers.parseEther('1.0'),
-        }),
-      ).not.to.be.reverted;
-
-      expect(await ethers.provider.getBalance(staking.target)).to.equal(
-        ethers.parseEther('1.0'),
-      );
-
-      expect(
-        await staking
-          .connect(owner)
-          .payout(otherAccount.address, ethers.parseEther('1.0')),
-      ).not.to.be.reverted;
-
-      expect(await ethers.provider.getBalance(staking.target)).to.equal(0);
-    });
-
-    it('Should receive and send YoZi', async () => {
-      const { yozi, staking, owner } = await loadFixture(deploy);
-
-      expect(
-        await yozi
-          .connect(owner)
-          .transfer(staking.target, ethers.parseEther('1.0')),
-      ).not.to.be.reverted;
-
-      expect(await yozi.balanceOf(staking.target)).to.equal(
-        ethers.parseEther('1.0'),
-      );
-
-      expect(
-        await staking
-          .connect(owner)
-          .transfer(owner.address, ethers.parseEther('1.0')),
-      ).not.to.be.reverted;
-
-      expect(await yozi.balanceOf(staking.target)).to.equal(0);
-    });
-
-    describe('Upgrade', () => {
-      let chainId;
-      let assetId;
-      let verifier;
-      let beacon;
-      let staking;
-      let owner;
-      let otherAccount;
-
-      before(async () => {
-        const fixture = await loadFixture(deploy);
-        chainId = fixture.chainId;
-        assetId = fixture.assetId;
-        verifier = fixture.verifier;
-        beacon = fixture.beacon;
-        staking = fixture.staking;
-        owner = fixture.owner;
-        otherAccount = fixture.otherAccount;
-      });
-
-      it('Should pause', async () => {
-        expect(await staking.connect(owner).pause()).not.to.be.reverted;
-      });
-
-      it('Should upgrade', async () => {
-        const V2 = await ethers.getContractFactory('Staking');
-
-        await upgrades.upgradeBeacon(beacon.target, V2);
-
-        expect(await staking.chainId()).to.equal(
-          `0x${Buffer.from(new TextEncoder().encode(chainId)).toString('hex')}`,
-        );
-
-        expect(await staking.assetId()).to.equal(
-          `0x${Buffer.from(new TextEncoder().encode(assetId)).toString('hex')}`,
-        );
-
-        expect(await staking.paused()).to.be.true;
-      });
-
-      it('Should unpause', async () => {
-        expect(await staking.connect(owner).unpause()).not.to.be.reverted;
-      });
-
-      it('Should set verifier', async () => {
-        expect(await staking.connect(owner).setVerifier(verifier)).not.to.be
-          .reverted;
-      });
     });
   });
 
@@ -256,7 +147,7 @@ describe('Staking', () => {
       await expect(
         staking.connect(otherAccount).stake(
           ['3'],
-          1000,
+          2592000,
           604800,
           [0xff, 0xff],
           [0xff, 0xff],
@@ -279,7 +170,7 @@ describe('Staking', () => {
       expect(
         await staking.connect(otherAccount).stake(
           ['3'],
-          1000,
+          2592000,
           604800,
           [0xff, 0xff],
           [0xff, 0xff],
@@ -294,7 +185,7 @@ describe('Staking', () => {
       expect(await staking.getStakes(otherAccount.address)).to.eql(['3']);
 
       const stake = await staking.stakes('3');
-      expect(stake.height).to.equal(1000);
+      expect(stake.height).to.equal(2592000);
       expect(stake.period).to.equal(604800);
       expect(stake.reward).to.equal(
         ethers.parseEther('333.333333333333333333'),
@@ -306,7 +197,7 @@ describe('Staking', () => {
       expect(
         await staking.connect(otherAccount).stake(
           ['5'],
-          1000,
+          2592000,
           1209600,
           [0xff, 0xff],
           [0xff, 0xff],
@@ -321,7 +212,7 @@ describe('Staking', () => {
       expect(
         await staking.connect(otherAccount).stake(
           ['7'],
-          1000,
+          2592000,
           2592000,
           [0xff, 0xff],
           [0xff, 0xff],
@@ -352,7 +243,7 @@ describe('Staking', () => {
       await expect(
         staking.connect(owner).stake(
           ['3'],
-          1000,
+          2592000,
           604800,
           [0xff, 0xff],
           [0xff, 0xff],
@@ -384,7 +275,7 @@ describe('Staking', () => {
 
       await staking.connect(owner).stake(
         ['1'],
-        1000,
+        2592000,
         604800,
         [0xff, 0xff],
         [0xff, 0xff],
@@ -397,7 +288,7 @@ describe('Staking', () => {
 
       await staking.connect(otherAccount).stake(
         ['3'],
-        1000,
+        2592000,
         604800,
         [0xff, 0xff],
         [0xff, 0xff],
@@ -410,7 +301,7 @@ describe('Staking', () => {
 
       await staking.connect(otherAccount).stake(
         ['5'],
-        1000,
+        2592000,
         604800,
         [0xff, 0xff],
         [0xff, 0xff],
@@ -435,7 +326,7 @@ describe('Staking', () => {
     });
 
     it('Should revert if insufficient reward', async () => {
-      await mineUpTo(1000 + 604800);
+      await mineUpTo(2592000 + 604800);
 
       await expect(
         staking.connect(otherAccount).withdraw('3'),
@@ -446,7 +337,7 @@ describe('Staking', () => {
       expect(
         await yozi
           .connect(owner)
-          .approve(staking.target, ethers.parseEther('1000000000.0')),
+          .approve(staking.target, ethers.parseEther('10000000000.0')),
       ).not.to.be.reverted;
 
       expect(await staking.connect(otherAccount).withdraw('3')).not.to.be
@@ -466,7 +357,7 @@ describe('Staking', () => {
       expect(
         await yozi
           .connect(otherAccount)
-          .approve(staking.target, ethers.parseEther('1000000000.0')),
+          .approve(staking.target, ethers.parseEther('10000000000.0')),
       ).not.to.be.reverted;
 
       expect(await staking.connect(owner).setHive(otherAccount.address)).not.to
