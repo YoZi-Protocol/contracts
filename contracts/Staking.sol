@@ -74,14 +74,12 @@ contract Staking is AccessControlUpgradeable, PausableUpgradeable {
         );
 
         uint256 amount;
-        if (_period == 60) {
-            amount = 0;
-        } else if (_period == 604800) {
-            amount = 2 * 10 ** 18;
+        if (_period == 604800) {
+            amount = 333_333_333_333_333_333_333;
         } else if (_period == 1209600) {
-            amount = 5 * 10 ** 18;
+            amount = 833_333_333_333_333_333_333;
         } else if (_period == 2592000) {
-            amount = 12 * 10 ** 18;
+            amount = 2_000_000_000_000_000_000_000;
         } else {
             revert("invalid period");
         }
@@ -189,6 +187,12 @@ contract Staking is AccessControlUpgradeable, PausableUpgradeable {
 
     function setHive(address _hive) public onlyRole(DEFAULT_ADMIN_ROLE) {
         hive = _hive;
+    }
+
+    function setVerifier(
+        address _verifier
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        verifier = Groth16Verifier(_verifier);
     }
 
     function transfer(
