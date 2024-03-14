@@ -8,7 +8,7 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./rollup-nft.sol";
 
-contract StakingV1 is AccessControlUpgradeable, PausableUpgradeable {
+contract Staking is AccessControlUpgradeable, PausableUpgradeable {
     struct Stake {
         uint256 height;
         uint256 period;
@@ -75,16 +75,16 @@ contract StakingV1 is AccessControlUpgradeable, PausableUpgradeable {
 
         uint256 amount;
         if (_period == 604800) {
-            amount = 2 * 10 ** 18;
+            amount = 333_333_333_333_333_333_333;
         } else if (_period == 1209600) {
-            amount = 5 * 10 ** 18;
+            amount = 833_333_333_333_333_333_333;
         } else if (_period == 2592000) {
-            amount = 12 * 10 ** 18;
+            amount = 2_000_000_000_000_000_000_000;
         } else {
             revert("invalid period");
         }
 
-        uint256[38] memory signals;
+        uint256[39] memory signals;
         signals[0] = chainId;
         signals[1] = assetId;
         signals[2] = uint256(uint160(msg.sender));
@@ -107,10 +107,11 @@ contract StakingV1 is AccessControlUpgradeable, PausableUpgradeable {
             i++;
         } while (i < 16);
 
-        signals[35] = _expiration + _period;
+        signals[35] = _expiration;
+        signals[36] = _period;
 
-        signals[36] = a[0];
-        signals[37] = a[1];
+        signals[37] = a[0];
+        signals[38] = a[1];
 
         require(
             verifier.verifyProof(pi_a, pi_b, pi_c, signals),
@@ -187,6 +188,12 @@ contract StakingV1 is AccessControlUpgradeable, PausableUpgradeable {
 
     function setHive(address _hive) public onlyRole(DEFAULT_ADMIN_ROLE) {
         hive = _hive;
+    }
+
+    function setVerifier(
+        address _verifier
+    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        verifier = Groth16Verifier(_verifier);
     }
 
     function transfer(
