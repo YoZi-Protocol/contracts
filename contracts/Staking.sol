@@ -32,6 +32,10 @@ contract Staking is AccessControlUpgradeable, PausableUpgradeable {
     uint256 public chainId;
     uint256 public assetId;
 
+    event Staked(string id, uint256 target, address owner);
+
+    event Withdrawn(string id, address owner);
+
     function initialize(
         address _beacon,
         IERC20 _reward,
@@ -124,6 +128,12 @@ contract Staking is AccessControlUpgradeable, PausableUpgradeable {
             locks[msg.sender].push(_ids[i]);
             i++;
         } while (i < _ids.length);
+
+        i = 0;
+        do {
+            emit Staked(_ids[i], _expiration + _period, msg.sender);
+            i++;
+        } while (i < _ids.length);
     }
 
     function withdraw(string calldata _id) external whenNotPaused {
@@ -153,6 +163,8 @@ contract Staking is AccessControlUpgradeable, PausableUpgradeable {
 
             i++;
         } while (i < _locks.length);
+
+        emit Withdrawn(_id, msg.sender);
     }
 
     function getStakes(address _account) public view returns (string[] memory) {
@@ -217,13 +229,14 @@ contract Staking is AccessControlUpgradeable, PausableUpgradeable {
     fallback() external payable {}
 
     function bytesToUint(bytes memory _b) internal pure returns (uint256) {
-        uint256 number;
-        for (uint i = 0; i < _b.length; i++) {
-            number =
-                number +
-                uint(uint8(_b[i])) *
-                (2 ** (8 * (_b.length - (i + 1))));
+        require(_b.length <= 32, "too long");
+
+        uint n;
+
+        assembly {
+            n := mload(add(_b, 0x20))
         }
-        return number;
+
+        return n >> (8 * (32 - _b.length));
     }
 }
